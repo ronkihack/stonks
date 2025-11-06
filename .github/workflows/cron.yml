@@ -1,4 +1,5 @@
-name: cron
+name: Update Stonks
+
 on:
   schedule:
     - cron: '0 * * * *'
@@ -7,48 +8,49 @@ on:
       - master
   workflow_dispatch:
 
+# Add permissions for pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 concurrency:
-  group: cron
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
-  cron:
+  # This job builds the site
+  build:
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
+          
       - name: Install Python dependencies
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -r ./requirements.txt
-
+          
       - name: Run Sync
         run: |
           python3 main.py
-
-      - name: Check for changes
-        run: |
-          echo "--- 1. Running git status ---"
-          git status
           
-          echo "\n--- 2. Listing all files (recursive) ---"
-          ls -laR
-          
-          echo "\n--- 3. Showing .gitignore content ---"
-          cat .gitignore
-
-      # This is the correct step that saves the files
-      - name: Commit and push changes
-        uses: EndBug/add-and-commit@v9
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          add: '.'
-          message: 'Automated stonks update'
-          push: true
+          # This tells it to upload the 'dist' folder
+          path: './dist'
+
+  # This job deploys the site
+  deploy:
+    # Requires the build job to finish first
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
