@@ -34,6 +34,17 @@ jobs:
         run: |
           python3 main.py
 
+      - name: Check for changes
+        run: |
+          echo "--- 1. Running git status ---"
+          git status
+          
+          echo "\n--- 2. Listing all files (recursive) ---"
+          ls -laR
+          
+          echo "\n--- 3. Showing .gitignore content ---"
+          cat .gitignore
+
       # This is the correct step that saves the files
       - name: Commit and push changes
         uses: EndBug/add-and-commit@v9
